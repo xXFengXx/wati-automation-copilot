@@ -82,7 +82,7 @@ The UI needs no database, login, or real Wati account. This local demo has no au
 
 - [One-page write-up](docs/write-up.md)
 - [One-page PDF](docs/write-up.pdf)
-- [Decision record](docs/adr/0001-validated-flows-and-deterministic-simulation.md), [glossary](GLOSSARY.md), and [agreed scope](docs/implementation-plan.md)
+- [Decision record](docs/adr/0001-validated-flows-and-deterministic-simulation.md) and [glossary](GLOSSARY.md)
 - [Demo recording](https://www.youtube.com/watch?v=gKxT_Wzv0vU)
 - Real-key acceptance has passed. The candidate supplied the recording link; final human review and submission remain candidate steps. No application deployment is claimed.
 
