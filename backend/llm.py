@@ -29,6 +29,7 @@ Node semantics:
 - trigger(event): starts the simulation; event is descriptive, not a live subscription.
 - send_message(message): may contain {variable} or {api_result.field} placeholders.
 - ask_question(question,variable,choices,timeout_seconds): waits for user input. Choices are case-insensitive allowed answers, or [] for free text. The next branch stores the answer. If timeout_seconds is set, include a timeout branch; timeout does not store an answer.
+- Do NOT add a question timeout unless the user explicitly specifies a no-reply duration. Otherwise timeout_seconds MUST be null. A wait/reminder duration never authorizes a question timeout. Do not add unrequested waits. Ask for a precise duration if requested timing is vague (e.g. "later"). Use only team names and destination URLs present in the user's description.
 - condition(variable,operator,value): operators eq,neq,contains are case-insensitive for text; gt,lt are numeric; exists checks a stored answer. Both true and false branches are REQUIRED. Unexpected input must have a safe fallback where applicable.
 - api_call(url,method,save_as,mock_response): HTTP business API is SIMULATED. URL must be explicitly supplied by user, with {variable} interpolation allowed. mock_response is small, synthetic flat test data, not real information. Both success and error branches are REQUIRED. Only success stores save_as and its fields; error branches must not read them.
 - assign_team(team): records a simulated assignment to the supplied team.

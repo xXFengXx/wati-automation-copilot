@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend import llm, main
 from backend.models import Generation
-from backend.tests.fixtures import buyer_flow
+from backend.tests.fixtures import buyer_flow, api_flow, followup_flow
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def client(monkeypatch):
 
 
 def create_flow(client):
-    response = client.post('/api/flows/generate', json={'prompt': 'Route buyers and sellers.'})
+    response = client.post('/api/flows/generate', json={'prompt': 'Route buyers to the Sales team and send sellers https://example.com/help.'})
     assert response.status_code == 200
     assert response.headers['X-Request-ID']
     return response.json()['id']
@@ -61,6 +61,28 @@ def test_unknown_resources_and_invalid_input(client):
     assert client.post('/api/flows/generate', json={'prompt': '   '}).status_code == 422
     assert client.post('/api/simulations', json={'flow_id': 'missing'}).status_code == 404
     assert client.post('/api/simulations/missing/answers', json={'answer': 'yes', 'expected_revision': 0}).status_code == 404
+
+
+def test_generated_malformed_url_is_inspectable_not_http_500(client, monkeypatch):
+    async def malformed(prompt):
+        flow = api_flow()
+        next(n for n in flow.nodes if n.type == 'api_call').url = 'https://['
+        return Generation(flow=flow, explanation='A generated invalid URL.')
+    monkeypatch.setattr(llm, 'generate', malformed)
+    response = client.post('/api/flows/generate', json={'prompt': 'Look up order status and assign failures to Support.'})
+    assert response.status_code == 200
+    record = response.json()
+    assert not record['valid'] and any(f['code'] == 'invalid_api_url' for f in record['findings'])
+    assert client.post('/api/simulations', json={'flow_id': record['id']}).status_code == 409
+
+
+def test_generated_unrequested_timeout_cannot_execute(client, monkeypatch):
+    async def invented_timeout(prompt):
+        return Generation(flow=followup_flow(), explanation='Includes an unrequested question timeout.')
+    monkeypatch.setattr(llm, 'generate', invented_timeout)
+    record = client.post('/api/flows/generate', json={'prompt': 'Ask about a demo. If yes, wait 30 minutes and send a reminder.'}).json()
+    assert not record['valid'] and any(f['code'] == 'ungrounded_timeout' for f in record['findings'])
+    assert client.post('/api/simulations', json={'flow_id': record['id']}).status_code == 409
 
 
 def mock_deepseek(monkeypatch, handler):

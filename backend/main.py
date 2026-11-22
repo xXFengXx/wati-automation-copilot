@@ -59,7 +59,7 @@ async def generate_flow(body: GenerateRequest):
     generated = await llm.generate(body.prompt.strip())
     if generated.flow is None:
         return {'status': 'needs_clarification', **generated.model_dump()}
-    findings = validate_flow(generated.flow)
+    findings = validate_flow(generated.flow, prompt=body.prompt.strip())
     record = {'id': uuid4().hex, 'prompt': body.prompt.strip(), 'flow': generated.flow.model_dump(), 'explanation': generated.explanation, 'findings': [f.model_dump() for f in findings], 'valid': not any(f.severity == 'error' for f in findings), 'provider': 'DeepSeek', 'model': llm.settings()['model']}
     with lock:
         flows[record['id']] = record
@@ -91,7 +91,7 @@ def start_simulation(body: SimulationRequest):
         if not record:
             raise HTTPException(404, 'Flow not found. Generate it again.')
         flow = Flow.model_validate(record['flow'])
-        if any(f.severity == 'error' for f in validate_flow(flow)):
+        if any(f.severity == 'error' for f in validate_flow(flow, prompt=record['prompt'])):
             raise HTTPException(409, 'Resolve validation errors before simulation.')
         state = advance(new_simulation(body.flow_id, flow, body.scenario), flow)
         sessions[state['id']] = state

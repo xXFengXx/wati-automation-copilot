@@ -11,7 +11,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 
 root = Path(__file__).resolve().parents[1]
-output = root / 'output' / 'pdf' / 'automation-copilot-write-up.pdf'
+output = root / 'docs' / 'write-up.pdf'
 output.parent.mkdir(parents=True, exist_ok=True)
 green = colors.HexColor('#087f5b')
 styles = {

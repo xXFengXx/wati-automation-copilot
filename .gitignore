@@ -7,14 +7,7 @@ __pycache__/
 node_modules/
 frontend/dist/
 tmp/
-/output/*
-!/output/pdf/
-/output/pdf/*
-!/output/pdf/automation-copilot-write-up.pdf
-!/output/live-acceptance.json
-!/output/live-ui-result.json
-!/output/live-ui-desktop.png
-!/output/live-ui-mobile.png
+/output/
 /Wati_Automation_Builder_Copilot_Take_Home_*.pdf
 .aws/
 .codex/

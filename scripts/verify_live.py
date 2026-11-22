@@ -4,6 +4,7 @@ Requires real DeepSeek credentials configured in the backend. Performs three
 real inference calls; business execution remains simulated.
 """
 import json
+import argparse
 import sys
 import time
 from datetime import datetime, timezone
@@ -53,7 +54,11 @@ def check_business_result(name, reply, outcome, timeout, record, state, question
 
 
 def main():
-    base = sys.argv[1] if len(sys.argv) > 1 else 'http://127.0.0.1:8000'
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('base_url', nargs='?', default='http://127.0.0.1:8000')
+    parser.add_argument('--edge-cases', action='store_true', help='Make two extra real requests to verify missing-URL and vague-timing clarification.')
+    args = parser.parse_args()
+    base = args.base_url
     with httpx.Client(base_url=base, timeout=150, trust_env=False) as client:
         health = client.get('/api/health').raise_for_status().json()
         if not health['model_configured']:
@@ -91,6 +96,17 @@ def main():
                 evidence['paths'].append({'answer': reply, 'api_outcome': outcome, 'timeout': timeout, 'result': state})
                 print(f'PASS {name}: {reply or "no reply"} / {outcome}; {state["steps"]} steps, +{state["elapsed_seconds"]}s')
             report['scenarios'].append(evidence)
+        if args.edge_cases:
+            report['edge_cases'] = []
+            for name, prompt in [
+                ('missing help URL', 'When a new contact messages us, send them our help article. I have not provided its URL.'),
+                ('vague follow-up timing', 'When a new contact messages us, ask if they want a demo. If yes, follow up later with a friendly reminder. I have not specified when later is.'),
+            ]:
+                response = client.post('/api/flows/generate', json={'prompt': prompt}).raise_for_status()
+                result = response.json()
+                assert result['status'] == 'needs_clarification' and result.get('clarification_questions'), f'{name}: expected clarification'
+                report['edge_cases'].append({'name': name, 'prompt': prompt, 'request_id': response.headers.get('x-request-id'), 'result': result})
+                print(f'PASS clarification: {name}')
         output = Path(__file__).resolve().parents[1] / 'output' / 'live-acceptance.json'
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')

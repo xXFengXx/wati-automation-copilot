@@ -3,12 +3,13 @@ from collections import Counter, defaultdict, deque
 from urllib.parse import urlparse
 
 from .models import Finding, Flow
+from .intent_validation import validate_intent_alignment
 
 
 PLACEHOLDER = re.compile(r'\{([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?)\}')
 
 
-def validate_flow(flow: Flow) -> list[Finding]:
+def validate_flow(flow: Flow, prompt: str | None = None) -> list[Finding]:
     findings: list[Finding] = []
 
     def add(severity, code, message, node_id=None):
@@ -45,12 +46,19 @@ def validate_flow(flow: Flow) -> list[Finding]:
         if node.type == 'trigger' and incoming[node.id]:
             add('error', 'trigger_incoming', 'The trigger cannot have incoming connections.', node.id)
         if node.type == 'api_call':
-            parsed = urlparse(node.url)
-            if parsed.scheme not in {'https', 'http'} or not parsed.hostname:
+            parsed = None
+            try:
+                parsed = urlparse(node.url)
+                # urllib defers invalid/out-of-range port checks until this access.
+                _ = parsed.port
+                if parsed.scheme not in {'https', 'http'} or not parsed.hostname or re.search(r'\s', node.url):
+                    raise ValueError('Invalid HTTP(S) URL')
+            except ValueError:
                 add('error', 'invalid_api_url', 'Supply an explicit HTTP(S) business API URL.', node.id)
-            if parsed.username or parsed.password:
+                parsed = None
+            if parsed and (parsed.username or parsed.password):
                 add('error', 'url_credentials', 'Remove credentials from the API URL.', node.id)
-            if parsed.scheme == 'http':
+            if parsed and parsed.scheme == 'http':
                 add('warning', 'insecure_url', 'This API URL uses unencrypted HTTP.', node.id)
             add('warning', 'simulated_api', 'Business API responses are test fixtures; no business request will be sent.', node.id)
         if node.type == 'condition' and node.operator != 'exists' and node.value is None:
@@ -121,6 +129,11 @@ def validate_flow(flow: Flow) -> list[Finding]:
                         add('error', 'undefined_placeholder', f'"{{{variable}}}" is not available on every incoming path.', node.id)
             for edge in outgoing[node_id]:
                 outputs = definite.copy()
+                # Starting a new collection/lookup invalidates the previous value,
+                # including fields that belonged to its old object shape.
+                replaced = node.variable if node.type == 'ask_question' else node.save_as if node.type == 'api_call' else None
+                if replaced:
+                    outputs = {name for name in outputs if name != replaced and not name.startswith(replaced + '.')}
                 if node.type == 'ask_question' and edge.handle == 'next':
                     outputs.add(node.variable)
                 if node.type == 'api_call' and edge.handle == 'success':
@@ -130,4 +143,6 @@ def validate_flow(flow: Flow) -> list[Finding]:
                 degrees[edge.target] -= 1
                 if degrees[edge.target] == 0:
                     queue.append(edge.target)
+    if prompt is not None:
+        findings.extend(validate_intent_alignment(flow, prompt))
     return findings

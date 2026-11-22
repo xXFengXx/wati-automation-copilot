@@ -4,6 +4,10 @@ A local, interactive take-home prototype: describe an automation, generate a typ
 
 Python / FastAPI / Pydantic backend; React / TypeScript / React Flow frontend. Flow generation and explanation use DeepSeek. Business API calls, team assignments, triggers, and waits are explicitly simulated. There is no offline generation fallback or native Wati import claim.
 
+## Demo recording
+
+The final 3–5 minute recording link will be added here before submission. It should show 2–3 prompts through generation, validation, explanation, and simulation.
+
 ## Quick start (Windows PowerShell)
 
 Requirements: Python 3.12+, Node.js 22.12+ (24 LTS recommended), npm, and a funded DeepSeek API account. Tested here with Python 3.14 and Node 26. Run commands from the repository root.
@@ -49,6 +53,7 @@ React UI → FastAPI → DeepSeek JSON generation + explanation
 - `backend/models.py`: bounded, discriminated node types; flat API fixtures; no code execution.
 - `backend/llm.py`: JSON-mode request; one bounded retry for malformed structured output, explicit provider errors. Structural/semantic validation findings remain visible rather than being silently rewritten. The explanation is AI-generated and should be checked against the flow.
 - `backend/validation.py`: trigger/end rules, legal branch handles, dangling/duplicate nodes, reachability, end paths, cycle rejection, and branch-sensitive definite assignment. Timeout and API failure paths do not produce success variables. Warnings include simulated APIs, virtual waits, and missing response timeouts.
+- `backend/intent_validation.py`: conservatively checks that generated destinations and durations are grounded in the prompt. Team names and exact URLs must appear in the input. Waits and no-reply timeouts require explicit durations in their respective contexts (numeric or common English quantities, up to ninety-nine). Unsupported/ambiguous timing is blocked for clarification or regeneration. These bounded checks do not prove all conditions or business meaning correct.
 - `backend/simulation.py`: reproducible interpreter; supported nodes are trigger, send message, ask question, condition, API call, assign team, wait, end. Questions pause execution. Each answer carries a revision to reject stale/duplicate submissions. Text matching is case-insensitive; invalid numeric input follows the false branch. Question choices are enforced.
 - `backend/main.py`: JSON HTTP API, request IDs and metadata-only logs, bounded in-memory stores (100 flows / 300 sessions), a lock for session transitions. Eviction or restart removes data; regenerating creates a new flow and resets the UI conversation. Cycles are rejected and execution also has an 80-step ceiling.
 
@@ -67,16 +72,16 @@ npm run test:e2e
 
 Unit/API tests cover all three scenarios, exclusive branches, virtual timing, API errors, variable safety, session isolation, duplicate answers, clarification and provider errors/repair. Browser tests run the real API and interpreter with a **test-only provider stub** (`backend.tests.e2e_server`), covering graph inspection, JSON export, conversation branches, validation, failures, and mobile layout. They do not verify real DeepSeek connectivity. Never launch the test server for a demo. Production uses only `backend.main:app`.
 
-After configuring the key and starting the normal backend, run `.\.venv\Scripts\python.exe scripts\verify_live.py`. It makes three real generation requests and exercises seven simulation paths; inspect generated business content and explanations manually afterward. It refuses to count the test-only provider as live verification.
+After configuring the key and starting the normal backend, run `.\.venv\Scripts\python.exe scripts\verify_live.py`. It makes three real generation requests and exercises seven simulation paths; add `--edge-cases` for two additional real requests checking missing-URL and vague-timing clarification. Inspect generated business content and explanations manually afterward. It refuses to count the test-only provider as live verification.
 
-Live acceptance has passed against DeepSeek `deepseek-flash`, including business-result checks. Evidence is in `output/live-acceptance.json`. The optional `npm run test:live-ui` command (from `frontend`) checks the normal app in Edge with **one real, billed inference request** and saves screenshots and a summary in `output/`. See [verification details](docs/verification.md) for the scope of each check.
+Live acceptance has passed against DeepSeek `deepseek-flash`, including business-result checks. See the tracked [verification record](docs/verification.md). Scripts save raw evidence locally under `output/`, which is ignored by Git and is not needed to run the application. The optional `npm run test:live-ui` command (from `frontend`) checks the normal app in Edge with **one real, billed inference request** and saves local screenshots and a summary there.
 
 The UI needs no database, login, or real Wati account. This local demo has no authentication or multi-tenant isolation; it should be bound to loopback. Adding public hosting requires an explicit authentication/rate-limit/persistence design. Do not enter customer data or secrets into prompts: intent text is sent to DeepSeek.
 
 ## Submission materials
 
 - [One-page write-up](docs/write-up.md)
-- [One-page PDF](output/pdf/automation-copilot-write-up.pdf)
+- [One-page PDF](docs/write-up.pdf)
 - [Decision record](docs/adr/0001-validated-flows-and-deterministic-simulation.md), [glossary](GLOSSARY.md), and [agreed scope](docs/implementation-plan.md)
 - Real-key acceptance has passed. The final screen recording and candidate human review remain submission steps; no recording or deployment is claimed by this repository.
 

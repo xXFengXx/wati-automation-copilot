@@ -75,9 +75,11 @@ def advance(state, flow: Flow):
                 emit(state, 'bot', render(node.message, state['variables']), node.id)
                 entry['detail'] = 'Message sent in this simulation.'
             elif node.type == 'ask_question':
-                emit(state, 'bot', render(node.question, state['variables']), node.id)
+                question = render(node.question, state['variables'])
+                state['variables'].pop(node.variable, None)
+                emit(state, 'bot', question, node.id)
                 state['status'] = 'waiting'
-                state['question'] = {'text': render(node.question, state['variables']), 'choices': node.choices, 'timeout_seconds': node.timeout_seconds}
+                state['question'] = {'text': question, 'choices': node.choices, 'timeout_seconds': node.timeout_seconds}
                 entry['detail'] = f'Waiting for an answer → {node.variable}'
                 break
             elif node.type == 'condition':
@@ -85,6 +87,7 @@ def advance(state, flow: Flow):
                 entry['detail'] = f'{node.variable} {node.operator} {node.value!s} → {handle}'
             elif node.type == 'api_call':
                 target = render(node.url, state['variables'])
+                state['variables'].pop(node.save_as, None)
                 handle = 'error' if state['scenario'] == 'api_failure' else 'success'
                 if handle == 'success':
                     state['variables'][node.save_as] = copy.deepcopy(node.mock_response)
