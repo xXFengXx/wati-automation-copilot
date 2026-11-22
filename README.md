@@ -77,8 +77,6 @@ The UI needs no database, login, or real Wati account. This local demo has no au
 
 - [One-page write-up](docs/write-up.md)
 - [One-page PDF](output/pdf/automation-copilot-write-up.pdf)
-- [3–5 minute demo script and prompts](docs/demo-script.md)
-- [Recording companion: Chinese actions and conversational English narration](docs/demo-script.zh-CN.md)
 - [Decision record](docs/adr/0001-validated-flows-and-deterministic-simulation.md), [glossary](GLOSSARY.md), and [agreed scope](docs/implementation-plan.md)
 - Real-key acceptance has passed. The final screen recording and candidate human review remain submission steps; no recording or deployment is claimed by this repository.
 
