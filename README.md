@@ -6,7 +6,7 @@ Python / FastAPI / Pydantic backend; React / TypeScript / React Flow frontend. F
 
 ## Demo recording
 
-The final 3–5 minute recording link will be added here before submission. It should show 2–3 prompts through generation, validation, explanation, and simulation.
+[Watch the demo recording on YouTube](https://www.youtube.com/watch?v=gKxT_Wzv0vU)
 
 ## Quick start (Windows PowerShell)
 
@@ -83,7 +83,8 @@ The UI needs no database, login, or real Wati account. This local demo has no au
 - [One-page write-up](docs/write-up.md)
 - [One-page PDF](docs/write-up.pdf)
 - [Decision record](docs/adr/0001-validated-flows-and-deterministic-simulation.md), [glossary](GLOSSARY.md), and [agreed scope](docs/implementation-plan.md)
-- Real-key acceptance has passed. The final screen recording and candidate human review remain submission steps; no recording or deployment is claimed by this repository.
+- [Demo recording](https://www.youtube.com/watch?v=gKxT_Wzv0vU)
+- Real-key acceptance has passed. The candidate supplied the recording link; final human review and submission remain candidate steps. No application deployment is claimed.
 
 ## References
 

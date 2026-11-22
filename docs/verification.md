@@ -20,7 +20,7 @@ The initial sandbox could not launch Edge. Tests passed after the same local-onl
 
 Raw live evidence is generated locally under `output/` and is deliberately not tracked in Git. This document is the public verification summary. The one-page submission document is `docs/write-up.pdf`, with editable source in `docs/write-up.md`. Earlier real-provider browser screenshots remain local; the seven browser regression tests were rerun after the latest backend changes. Advisory findings remain for intentionally unconfigured question timeouts and simulated actions; there are no blocking findings in the accepted flows.
 
-The final recording, candidate human review, public hosting, and submission to a recruiter have not been performed.
+The candidate supplied a demo recording: https://www.youtube.com/watch?v=gKxT_Wzv0vU . Its content and duration have not been independently reviewed in this verification run. Final candidate human review, application hosting, and submission to a recruiter remain outside the checks recorded here.
 
 ## Validation regressions
 
