@@ -1,0 +1,16 @@
+{
+  "checked_at_utc": "2026-11-22T07:50:48.434Z",
+  "model": "deepseek-flash",
+  "flow_id": "0d03118bb2994c47bcec910197c57f31",
+  "flow_name": "Buyer or Seller Routing",
+  "nodes": 10,
+  "passed": [
+    "real generation",
+    "graph rendering",
+    "buyer → Sales",
+    "execution trace",
+    "no page errors",
+    "mobile layout"
+  ],
+  "request_id": "ff8d51f16c77"
+}
